@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secret Santa Generator</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    max-width:1000px;
+    margin:20px auto;
+    padding:20px;
+    background:#f5f7fa;
+}
+
+h1{
+    text-align:center;
+}
+
+textarea,input{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    margin-bottom:15px;
+}
+
+button{
+    background:#0a66c2;
+    color:white;
+    border:none;
+    padding:12px 18px;
+    cursor:pointer;
+    border-radius:5px;
+}
+
+button:hover{
+    background:#004182;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    margin-top:15px;
+    border-radius:8px;
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+
+.hidden{
+    display:none;
+}
+
+.linkBox{
+    word-break:break-all;
+    background:#eef4ff;
+    padding:10px;
+    border-radius:6px;
+    margin-top:8px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎅 Secret Santa Generator</h1>
+
+<div class="card">
+
+<label><b>Participants (one per line)</b></label>
+<textarea id="names" rows="12"
+placeholder="Alice
+Bob
+Charlie
+David"></textarea>
+
+<label><b>Exclusions</b></label>
+
+<textarea id="exclusions" rows="6"
+placeholder="Alice,Bob
+Charlie,David
+
+Format:
+PersonA,PersonB">
+</textarea>
+
+<button onclick="generate()">Generate Secret Santa</button>
+
+</div>
+
+<div id="results"></div>
+
+<script>
+
+function shuffle(array){
+    for(let i=array.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [array[i],array[j]]=[array[j],array[i]];
+    }
+}
+
+function generate(){
+
+    const names=document.getElementById("names")
+        .value
+        .split("\n")
+        .map(x=>x.trim())
+        .filter(Boolean);
+
+    if(names.length<2){
+        alert("Add at least two participants.");
+        return;
+    }
+
+    const exclusionsText=document
+        .getElementById("exclusions")
+        .value
+        .split("\n")
+        .filter(Boolean);
+
+    const exclusions=new Set();
+
+    exclusionsText.forEach(line=>{
+        const parts=line.split(",");
+        if(parts.length===2){
+
+            const a=parts[0].trim();
+            const b=parts[1].trim();
+
+            exclusions.add(a+"|"+b);
+            exclusions.add(b+"|"+a);
+        }
+    });
+
+    let assignments=null;
+    let attempts=0;
+
+    while(attempts<5000){
+
+        attempts++;
+
+        const recipients=[...names];
+        shuffle(recipients);
+
+        let valid=true;
+
+        for(let i=0;i<names.length;i++){
+
+            const giver=names[i];
+            const receiver=recipients[i];
+
+            if(giver===receiver){
+                valid=false;
+                break;
+            }
+
+            if(exclusions.has(giver+"|"+receiver)){
+                valid=false;
+                break;
+            }
+        }
+
+        if(valid){
+
+            assignments={};
+
+            names.forEach((name,index)=>{
+                assignments[name]=recipients[index];
+            });
+
+            break;
+        }
+    }
+
+    if(!assignments){
+        alert("Unable to generate assignments. Check exclusions.");
+        return;
+    }
+
+    showResults(assignments);
+}
+
+function showResults(assignments){
+
+    const results=document.getElementById("results");
+
+    results.innerHTML="<h2>Participant Links</h2>";
+
+    Object.keys(assignments).forEach(name=>{
+
+        const recipient=assignments[name];
+
+        const token=btoa(
+            encodeURIComponent(JSON.stringify({
+                name:name,
+                recipient:recipient
+            }))
+        );
+
+        const revealLink=
+            window.location.origin +
+            window.location.pathname +
+            "#"+token;
+
+        const emailText=
+`Subject: Your Secret Santa Assignment
+
+Hello ${name},
+
+Click the private link below to reveal your Secret Santa recipient:
+
+${revealLink}
+
+Please keep it secret.
+
+Happy Secret Santa!`;
+
+        results.innerHTML += `
+        <div class="card">
+
+            <h3>${name}</h3>
+
+            <div class="linkBox">${revealLink}</div>
+
+            <details>
+                <summary>Email Template</summary>
+                <pre>${emailText}</pre>
+            </details>
+
+        </div>
+        `;
+    });
+}
+
+window.onload=function(){
+
+    if(window.location.hash.length>1){
+
+        document.body.innerHTML="";
+
+        try{
+
+            const token=
+                decodeURIComponent(
+                    atob(window.location.hash.substring(1))
+                );
+
+            const data=JSON.parse(token);
+
+            document.body.innerHTML=`
+            <div class="card">
+                <h1>🎁 Secret Santa</h1>
+
+                <p>Hello <b>${data.name}</b></p>
+
+                <p>Your recipient is:</p>
+
+                <h2>${data.recipient}</h2>
+
+                <p>Please keep this secret.</p>
+            </div>
+            `;
+        }
+        catch(e){
+
+            document.body.innerHTML=
+            "<h2>Invalid Secret Santa Link</h2>";
+        }
+    }
+}
+</script>
+
+</body>
+</html>
