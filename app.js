@@ -28,35 +28,35 @@ import {
 
 document
   .getElementById("registerBtn")
-  .addEventListener("click", registerUser);
+  ?.addEventListener("click", registerUser);
 
 document
   .getElementById("loginBtn")
-  .addEventListener("click", loginUser);
+  ?.addEventListener("click", loginUser);
 
 document
   .getElementById("logoutBtn")
-  .addEventListener("click", () => signOut(auth));
+  ?.addEventListener("click", () => signOut(auth));
 
 document
   .getElementById("saveWishlistBtn")
-  .addEventListener("click", saveWishlist);
+  ?.addEventListener("click", saveWishlist);
 
 document
   .getElementById("saveRsvpBtn")
-  .addEventListener("click", saveRsvp);
+  ?.addEventListener("click", saveRsvp);
 
 document
   .getElementById("saveBudgetBtn")
-  .addEventListener("click", saveBudget);
+  ?.addEventListener("click", saveBudget);
 
 document
   .getElementById("toggleRegistrationBtn")
-  .addEventListener("click", toggleRegistration);
+  ?.addEventListener("click", toggleRegistration);
 
 document
   .getElementById("generateDrawBtn")
-  .addEventListener("click", generateDraw);
+  ?.addEventListener("click", generateDraw);
 
 
 // =========================
@@ -67,11 +67,15 @@ async function registerUser() {
 
   try {
 
+    console.log("STEP 1");
+
     const settingsRef =
       doc(db, "settings", "event");
 
     const settingsSnap =
       await getDoc(settingsRef);
+
+    console.log("STEP 2");
 
     if (
       settingsSnap.exists() &&
@@ -97,12 +101,21 @@ async function registerUser() {
         .split("\n")
         .filter(Boolean);
 
+    console.log("STEP 3");
+
     const result =
       await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
+
+    console.log(
+      "AUTH SUCCESS",
+      result.user.uid
+    );
+
+    console.log("STEP 4");
 
     await setDoc(
       doc(
@@ -121,11 +134,17 @@ async function registerUser() {
       }
     );
 
+    console.log("FIRESTORE SUCCESS");
+
     alert("Registration successful!");
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "REGISTRATION ERROR",
+      error
+    );
+
     alert(error.message);
 
   }
@@ -141,14 +160,16 @@ async function loginUser() {
   try {
 
     const email =
-      document.getElementById(
-        "loginEmail"
-      ).value.trim();
+      document
+        .getElementById("loginEmail")
+        .value
+        .trim();
 
     const password =
-      document.getElementById(
-        "loginPassword"
-      ).value.trim();
+      document
+        .getElementById("loginPassword")
+        .value
+        .trim();
 
     await signInWithEmailAndPassword(
       auth,
@@ -159,6 +180,7 @@ async function loginUser() {
   } catch (error) {
 
     console.error(error);
+
     alert(error.message);
 
   }
@@ -194,21 +216,54 @@ onAuthStateChanged(
       .getElementById("dashboard")
       .classList.remove("hidden");
 
+    const settingsSnap =
+      await getDoc(
+        doc(
+          db,
+          "settings",
+          "event"
+        )
+      );
+
+    if (settingsSnap.exists()) {
+
+      const settings =
+        settingsSnap.data();
+
+      document
+        .getElementById("budget")
+        .textContent =
+        settings.budget || 20;
+
+      const budgetDisplay =
+        document.getElementById(
+          "budgetDisplay"
+        );
+
+      if (budgetDisplay) {
+
+        budgetDisplay.textContent =
+          settings.budget || 20;
+
+      }
+    }
+
     if (
       user.email === ADMIN_EMAIL
     ) {
+
       await loadAdminDashboard();
+
     }
 
-    const userRef =
-      doc(
-        db,
-        "participants",
-        user.uid
-      );
-
     const snapshot =
-      await getDoc(userRef);
+      await getDoc(
+        doc(
+          db,
+          "participants",
+          user.uid
+        )
+      );
 
     if (!snapshot.exists()) {
       return;
@@ -241,6 +296,7 @@ onAuthStateChanged(
         data.recipient;
 
     }
+
   }
 );
 
@@ -253,6 +309,8 @@ async function saveWishlist() {
 
   const user =
     auth.currentUser;
+
+  if (!user) return;
 
   const wishlist =
     document
@@ -289,11 +347,11 @@ async function saveRsvp() {
   const user =
     auth.currentUser;
 
+  if (!user) return;
+
   const rsvp =
     document
-      .getElementById(
-        "rsvp"
-      )
+      .getElementById("rsvp")
       .value === "true";
 
   await updateDoc(
@@ -319,9 +377,16 @@ async function saveRsvp() {
 
 async function loadAdminDashboard() {
 
-  document
-    .getElementById("adminPanel")
-    .classList.remove("hidden");
+  const adminPanel =
+    document.getElementById(
+      "adminPanel"
+    );
+
+  if (!adminPanel) return;
+
+  adminPanel
+    .classList
+    .remove("hidden");
 
   const snapshot =
     await getDocs(
@@ -331,15 +396,18 @@ async function loadAdminDashboard() {
       )
     );
 
-  const participants = [];
+  const participants =
+    [];
 
-  snapshot.forEach(docSnap => {
+  snapshot.forEach(
+    (docSnap) => {
 
-    participants.push(
-      docSnap.data()
-    );
+      participants.push(
+        docSnap.data()
+      );
 
-  });
+    }
+  );
 
   document
     .getElementById(
@@ -350,16 +418,18 @@ async function loadAdminDashboard() {
 
   let html = "";
 
-  participants.forEach(p => {
+  participants.forEach(
+    (p) => {
 
-    html += `
-      <div>
-        ${p.name}
-        (${p.rsvp ? "✅" : "❌"})
-      </div>
-    `;
+      html += `
+        <div>
+          ${p.name}
+          (${p.rsvp ? "✅" : "❌"})
+        </div>
+      `;
 
-  });
+    }
+  );
 
   document
     .getElementById(
@@ -413,7 +483,7 @@ async function saveBudget() {
 
 
 // =========================
-// REGISTRATION
+// REGISTRATION OPEN/CLOSE
 // =========================
 
 async function toggleRegistration() {
@@ -456,13 +526,10 @@ async function toggleRegistration() {
 // =========================
 
 const exclusions = [
-
   ["Amanda", "Nick Farmer"],
   ["Nick Farmer", "Amanda"],
-
   ["Mel", "Mark"],
   ["Mark", "Mel"]
-
 ];
 
 
@@ -480,16 +547,19 @@ async function generateDraw() {
       )
     );
 
-  const players = [];
+  const players =
+    [];
 
-  snapshot.forEach(docSnap => {
+  snapshot.forEach(
+    (docSnap) => {
 
-    players.push({
-      id: docSnap.id,
-      ...docSnap.data()
-    });
+      players.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
 
-  });
+    }
+  );
 
   let valid =
     false;
@@ -507,8 +577,7 @@ async function generateDraw() {
         Math.random() - 0.5
     );
 
-    valid =
-      true;
+    valid = true;
 
     for (
       let i = 0;
@@ -533,14 +602,12 @@ async function generateDraw() {
 
       const prohibited =
         exclusions.some(
-          pair =>
+          (pair) =>
             pair[0] === giver &&
             pair[1] === receiver
         );
 
-      if (
-        prohibited
-      ) {
+      if (prohibited) {
 
         valid = false;
         break;
@@ -565,7 +632,6 @@ async function generateDraw() {
       {
         giver:
           players[i].name,
-
         recipient:
           recipients[i].name
       }
