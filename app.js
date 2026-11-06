@@ -1,618 +1,591 @@
-const ADMIN_EMAIL =
-"admin@ttrnottingham.com";
+const ADMIN_EMAIL = "admin@ttrnottingham.com";
 
 import {
- auth,
- db
-}
-from "./firebase-config.js";
+  auth,
+  db
+} from "./firebase-config.js";
 
 import {
- createUserWithEmailAndPassword,
- signInWithEmailAndPassword,
- signOut,
- onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
 import {
- doc,
- setDoc,
- getDoc,
- updateDoc
-}
-from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+
+// =========================
+// EVENT LISTENERS
+// =========================
 
 document
-.getElementById(
-"registerBtn"
-)
-.addEventListener(
-"click",
-registerUser
-const settingsRef =
-doc(
- db,
- "settings",
- "event"
-);
-
-const settingsSnap =
-await getDoc(
- settingsRef
-);
-
-if(
- settingsSnap.exists()
- &&
- settingsSnap.data()
- .registrationOpen === false
-){
-
- alert(
- "Registration closed"
- );
-
- return;
-
-}
-);
+  .getElementById("registerBtn")
+  .addEventListener("click", registerUser);
 
 document
-.getElementById(
-"loginBtn"
-)
-.addEventListener(
-"click",
-loginUser
-);
+  .getElementById("loginBtn")
+  .addEventListener("click", loginUser);
 
-async function registerUser(){
+document
+  .getElementById("logoutBtn")
+  .addEventListener("click", () => signOut(auth));
 
- const name =
- document.getElementById(
- "name"
- ).value;
+document
+  .getElementById("saveWishlistBtn")
+  .addEventListener("click", saveWishlist);
 
- const email =
- document.getElementById(
- "email"
- ).value;
+document
+  .getElementById("saveRsvpBtn")
+  .addEventListener("click", saveRsvp);
 
- const password =
- document.getElementById(
- "password"
- ).value;
+document
+  .getElementById("saveBudgetBtn")
+  .addEventListener("click", saveBudget);
 
- const wishlist =
- document
- .getElementById(
- "wishlist"
- )
- .value
- .split("\n")
- .filter(Boolean);
+document
+  .getElementById("toggleRegistrationBtn")
+  .addEventListener("click", toggleRegistration);
 
- try{
+document
+  .getElementById("generateDrawBtn")
+  .addEventListener("click", generateDraw);
 
- const result =
- await createUserWithEmailAndPassword(
- auth,
- email,
- password
- );
 
- await setDoc(
- doc(
- db,
- "participants",
- result.user.uid
- ),
- {
-  name,
-  email,
-  role:"participant",
-  wishlist,
-  rsvp:true,
-  recipient:"",
-  giftStatus:
-   "Not Started"
- }
- );
+// =========================
+// REGISTER
+// =========================
 
- alert(
- "Registration successful"
- );
+async function registerUser() {
 
- }catch(error){
+  try {
 
-  alert(error.message);
+    const settingsRef =
+      doc(db, "settings", "event");
 
- }
+    const settingsSnap =
+      await getDoc(settingsRef);
 
+    if (
+      settingsSnap.exists() &&
+      settingsSnap.data().registrationOpen === false
+    ) {
+      alert("Registration is closed.");
+      return;
+    }
+
+    const name =
+      document.getElementById("name").value.trim();
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value.trim();
+
+    const wishlist =
+      document
+        .getElementById("wishlist")
+        .value
+        .split("\n")
+        .filter(Boolean);
+
+    const result =
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    await setDoc(
+      doc(
+        db,
+        "participants",
+        result.user.uid
+      ),
+      {
+        name,
+        email,
+        role: "participant",
+        wishlist,
+        rsvp: true,
+        recipient: "",
+        giftStatus: "Not Started"
+      }
+    );
+
+    alert("Registration successful!");
+
+  } catch (error) {
+
+    console.error(error);
+    alert(error.message);
+
+  }
 }
 
-async function loginUser(){
 
- const email =
- document.getElementById(
- "loginEmail"
- ).value;
+// =========================
+// LOGIN
+// =========================
 
- const password =
- document.getElementById(
- "loginPassword"
- ).value;
+async function loginUser() {
 
- try{
+  try {
 
- await signInWithEmailAndPassword(
- auth,
- email,
- password
- );
+    const email =
+      document.getElementById(
+        "loginEmail"
+      ).value.trim();
 
- }catch(error){
+    const password =
+      document.getElementById(
+        "loginPassword"
+      ).value.trim();
 
- alert(error.message);
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
- }
+  } catch (error) {
 
+    console.error(error);
+    alert(error.message);
+
+  }
 }
+
+
+// =========================
+// AUTH STATE
+// =========================
 
 onAuthStateChanged(
- 
- if(user.email === ADMIN_EMAIL){
+  auth,
+  async (user) => {
 
- loadAdminDashboard();
+    if (!user) {
 
-}
- auth,
- async(user)=>{
+      document
+        .getElementById("authCard")
+        .classList.remove("hidden");
 
- if(!user){
+      document
+        .getElementById("dashboard")
+        .classList.add("hidden");
 
- return;
+      return;
+    }
 
- }
+    document
+      .getElementById("authCard")
+      .classList.add("hidden");
 
- document
- .getElementById(
- "authCard"
- )
- .classList.add(
- "hidden"
- );
+    document
+      .getElementById("dashboard")
+      .classList.remove("hidden");
 
- document
- .getElementById(
- "dashboard"
- )
- .classList.remove(
- "hidden"
- );
+    if (
+      user.email === ADMIN_EMAIL
+    ) {
+      await loadAdminDashboard();
+    }
 
- const snapshot =
- await getDoc(
- doc(
- db,
- "participants",
- user.uid
- )
- );
+    const userRef =
+      doc(
+        db,
+        "participants",
+        user.uid
+      );
 
- const data =
- snapshot.data();
+    const snapshot =
+      await getDoc(userRef);
 
- document
- .getElementById(
- "userName"
- )
- .textContent =
- data.name;
+    if (!snapshot.exists()) {
+      return;
+    }
 
- document
- .getElementById(
- "wishlistEdit"
- )
- .value =
- data.wishlist.join("\n");
+    const data =
+      snapshot.data();
 
- document
- .getElementById(
- "rsvp"
- )
- .value =
- data.rsvp.toString();
+    document
+      .getElementById("userName")
+      .textContent =
+      data.name;
 
-});
+    document
+      .getElementById("wishlistEdit")
+      .value =
+      (data.wishlist || [])
+      .join("\n");
 
-document
-.getElementById(
-"logoutBtn"
-)
-.addEventListener(
-"click",
-()=>signOut(auth)
+    document
+      .getElementById("rsvp")
+      .value =
+      String(data.rsvp);
+
+    if (data.recipient) {
+
+      document
+        .getElementById("recipient")
+        .textContent =
+        data.recipient;
+
+    }
+  }
 );
 
-async function saveWishlist(){
 
- const user =
- auth.currentUser;
+// =========================
+// WISHLIST
+// =========================
 
- const wishlist =
- document
- .getElementById(
- "wishlistEdit"
- )
- .value
- .split("\n")
- .filter(Boolean);
+async function saveWishlist() {
 
- await updateDoc(
- doc(
- db,
- "participants",
- user.uid
- ),
- {
-  wishlist
- }
- );
+  const user =
+    auth.currentUser;
 
- alert(
- "Wishlist updated"
- );
-}
+  const wishlist =
+    document
+      .getElementById(
+        "wishlistEdit"
+      )
+      .value
+      .split("\n")
+      .filter(Boolean);
 
-document
-.getElementById(
-"saveWishlistBtn"
-)
-.addEventListener(
-"click",
-saveWishlist
-);
-
-async function saveRsvp(){
-
- const user =
- auth.currentUser;
-
- const rsvp =
- document
- .getElementById(
- "rsvp"
- )
- .value === "true";
-
- await updateDoc(
- doc(
- db,
- "participants",
- user.uid
- ),
- {
-   rsvp
- });
-
- alert(
- "RSVP updated"
- );
-}
-
-document
-.getElementById(
-"saveRsvpBtn"
-)
-.addEventListener(
-"click",
-saveRsvp
-);
-
-import {
- collection,
- getDocs
-}
-from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-
-async function loadAdminDashboard(){
-
- document
- .getElementById("adminPanel")
- .classList.remove("hidden");
-
- const participantsSnapshot =
- await getDocs(
- collection(
- db,
- "participants"
- )
- );
-
- const participants=[];
-
- participantsSnapshot.forEach(
- doc=>{
-  participants.push(
-   doc.data()
+  await updateDoc(
+    doc(
+      db,
+      "participants",
+      user.uid
+    ),
+    {
+      wishlist
+    }
   );
- });
 
- document
- .getElementById(
- "participantCount"
- )
- .textContent=
- participants.length;
-
- let html="";
-
- participants.forEach(
- p=>{
-
- html += `
- <div>
- ${p.name}
- (${p.rsvp ? '✅':'❌'})
- </div>
- `;
-
- });
-
- document
- .getElementById(
- "participantList"
- )
- .innerHTML=
- html;
-
+  alert(
+    "Wishlist updated."
+  );
 }
 
-import {
- getDoc,
- setDoc
-}
-from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-document
-.getElementById(
-"saveBudgetBtn"
-)
-.addEventListener(
-"click",
-saveBudget
-);
+// =========================
+// RSVP
+// =========================
 
-async function saveBudget(){
+async function saveRsvp() {
 
- const budget=
- Number(
- document
- .getElementById(
- "budgetInput"
- )
- .value
- );
+  const user =
+    auth.currentUser;
 
- await setDoc(
- doc(
- db,
- "settings",
- "event"
- ),
- {
-  budget
- },
- {
-  merge:true
- }
- );
+  const rsvp =
+    document
+      .getElementById(
+        "rsvp"
+      )
+      .value === "true";
 
- alert(
- "Budget updated"
- );
+  await updateDoc(
+    doc(
+      db,
+      "participants",
+      user.uid
+    ),
+    {
+      rsvp
+    }
+  );
 
+  alert(
+    "RSVP updated."
+  );
 }
 
-document
-.getElementById(
-"toggleRegistrationBtn"
-)
-.addEventListener(
-"click",
-toggleRegistration
-);
 
-async function toggleRegistration(){
+// =========================
+// ADMIN DASHBOARD
+// =========================
 
- const settingsRef =
- doc(
- db,
- "settings",
- "event"
- );
+async function loadAdminDashboard() {
 
- const settingsSnap =
- await getDoc(
- settingsRef
- );
+  document
+    .getElementById("adminPanel")
+    .classList.remove("hidden");
 
- const current =
- settingsSnap.data()
- .registrationOpen;
+  const snapshot =
+    await getDocs(
+      collection(
+        db,
+        "participants"
+      )
+    );
 
- await setDoc(
- settingsRef,
- {
-  registrationOpen:
-  !current
- },
- {
-  merge:true
- }
- );
+  const participants = [];
 
- alert(
- "Registration updated"
- );
+  snapshot.forEach(docSnap => {
 
-}
-
-document
-.getElementById(
-"generateDrawBtn"
-)
-.addEventListener(
-"click",
-generateDraw
-);
-
-const exclusions = [
-
- ["Amanda","Nick Farmer"],
- ["Nick Farmer","Amanda"],
-
- ["Mel","Mark"],
- ["Mark","Mel"]
-
-];
-
-async function generateDraw(){
-
- const snapshot =
- await getDocs(
- collection(
- db,
- "participants"
- )
- );
-
- const players=[];
-
- snapshot.forEach(
- d=>{
-
-  players.push({
-
-   id:d.id,
-
-   ...d.data()
+    participants.push(
+      docSnap.data()
+    );
 
   });
 
- });
+  document
+    .getElementById(
+      "participantCount"
+    )
+    .textContent =
+    participants.length;
 
- let valid=false;
+  let html = "";
 
- let recipients=[];
+  participants.forEach(p => {
 
- while(!valid){
+    html += `
+      <div>
+        ${p.name}
+        (${p.rsvp ? "✅" : "❌"})
+      </div>
+    `;
 
-  recipients=
-  [...players];
+  });
 
-  recipients.sort(
-   ()=>Math.random()-0.5
-  );
-
-  valid=true;
-
-  for(
-   let i=0;
-   i<players.length;
-   i++
-  ){
-
-   const giver =
-   players[i].name;
-
-   const receiver =
-   recipients[i].name;
-
-   if(
-    giver === receiver
-   ){
-
-    valid=false;
-    break;
-
-   }
-
-   const prohibited =
-   exclusions.some(
-    pair=>
-
-    pair[0]===giver &&
-    pair[1]===receiver
-
-   );
-
-   if(prohibited){
-
-    valid=false;
-    break;
-
-   }
-  }
- }
-
- for(
-  let i=0;
-  i<players.length;
-  i++
- ){
-
-  await setDoc(
-
-   doc(
-    db,
-    "assignments",
-    players[i].id
-   ),
-
-   {
-
-    giver:
-    players[i].name,
-
-    recipient:
-    recipients[i].name
-
-   }
-
-  );
-
-  await updateDoc(
-
-   doc(
-    db,
-    "participants",
-    players[i].id
-   ),
-
-   {
-    recipient:
-    recipients[i].name
-   }
-
-  );
- }
-
- alert(
- "Draw completed!"
- );
-
+  document
+    .getElementById(
+      "participantList"
+    )
+    .innerHTML =
+    html;
 }
 
-if(data.recipient){
 
- document
- .getElementById(
- "recipient"
- )
- .textContent =
- data.recipient;
+// =========================
+// BUDGET
+// =========================
 
+async function saveBudget() {
+
+  const budget =
+    Number(
+      document
+        .getElementById(
+          "budgetInput"
+        )
+        .value
+    );
+
+  await setDoc(
+    doc(
+      db,
+      "settings",
+      "event"
+    ),
+    {
+      budget
+    },
+    {
+      merge: true
+    }
+  );
+
+  document
+    .getElementById(
+      "budgetDisplay"
+    )
+    .textContent =
+    budget;
+
+  alert(
+    "Budget updated."
+  );
+}
+
+
+// =========================
+// REGISTRATION
+// =========================
+
+async function toggleRegistration() {
+
+  const settingsRef =
+    doc(
+      db,
+      "settings",
+      "event"
+    );
+
+  const settingsSnap =
+    await getDoc(
+      settingsRef
+    );
+
+  const current =
+    settingsSnap.data()
+    .registrationOpen;
+
+  await setDoc(
+    settingsRef,
+    {
+      registrationOpen:
+        !current
+    },
+    {
+      merge: true
+    }
+  );
+
+  alert(
+    "Registration updated."
+  );
+}
+
+
+// =========================
+// EXCLUSIONS
+// =========================
+
+const exclusions = [
+
+  ["Amanda", "Nick Farmer"],
+  ["Nick Farmer", "Amanda"],
+
+  ["Mel", "Mark"],
+  ["Mark", "Mel"]
+
+];
+
+
+// =========================
+// DRAW GENERATOR
+// =========================
+
+async function generateDraw() {
+
+  const snapshot =
+    await getDocs(
+      collection(
+        db,
+        "participants"
+      )
+    );
+
+  const players = [];
+
+  snapshot.forEach(docSnap => {
+
+    players.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+
+  });
+
+  let valid =
+    false;
+
+  let recipients =
+    [];
+
+  while (!valid) {
+
+    recipients =
+      [...players];
+
+    recipients.sort(
+      () =>
+        Math.random() - 0.5
+    );
+
+    valid =
+      true;
+
+    for (
+      let i = 0;
+      i < players.length;
+      i++
+    ) {
+
+      const giver =
+        players[i].name;
+
+      const receiver =
+        recipients[i].name;
+
+      if (
+        giver === receiver
+      ) {
+
+        valid = false;
+        break;
+
+      }
+
+      const prohibited =
+        exclusions.some(
+          pair =>
+            pair[0] === giver &&
+            pair[1] === receiver
+        );
+
+      if (
+        prohibited
+      ) {
+
+        valid = false;
+        break;
+
+      }
+
+    }
+  }
+
+  for (
+    let i = 0;
+    i < players.length;
+    i++
+  ) {
+
+    await setDoc(
+      doc(
+        db,
+        "assignments",
+        players[i].id
+      ),
+      {
+        giver:
+          players[i].name,
+
+        recipient:
+          recipients[i].name
+      }
+    );
+
+    await updateDoc(
+      doc(
+        db,
+        "participants",
+        players[i].id
+      ),
+      {
+        recipient:
+          recipients[i].name
+      }
+    );
+
+  }
+
+  alert(
+    "Secret Santa draw completed!"
+  );
 }
