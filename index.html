@@ -1,224 +1,285 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-<meta charset="utf-8">
+  <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
-<title>🎄 Secret Santa 2026</title>
+  <title>🎄 TuT - TTR Nottingham Secret Santa 2026</title>
 
-<link
-rel="stylesheet"
-href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css">
 
 </head>
 
 <body>
 
-<header class="header">
+  <header class="header">
 
-<h1>🎄 Secret Santa 2026 🎅</h1>
+    <h1>
+      🎄 Secret Santa 2026 🎅
+    </h1>
 
-<p>
-🏉 TuT - TTR Nottingham Secret Santa 2026 🎄
-</p>
+    <p>
+      🏉 TuT - TTR Nottingham Secret Santa 2026
+    </p>
 
-</header>
+  </header>
 
-<div class="container">
+  <div class="container">
 
-<div
-id="authCard"
-class="card">
+    <!-- REGISTRATION / LOGIN -->
 
-<h2>Register</h2>
+    <div
+      id="authCard"
+      class="card">
 
-<input
-id="name"
-placeholder="Name">
+      <h2>Join Secret Santa</h2>
 
-<input
-id="email"
-placeholder="Email">
+      <input
+        id="name"
+        type="text"
+        placeholder="Your Name">
 
-<input
-id="password"
-type="password"
-placeholder="Password">
+      <input
+        id="email"
+        type="email"
+        placeholder="Email Address">
 
-<textarea
-id="wishlist"
-placeholder="Wishlist (one item per line)">
-</textarea>
+      <input
+        id="password"
+        type="password"
+        placeholder="Choose Password">
 
-<button id="registerBtn">
+      <textarea
+        id="wishlist"
+        rows="5"
+        placeholder="Wishlist (one item per line)"></textarea>
 
-Join Secret Santa
+      <button id="registerBtn">
 
-</button>
+        Join Secret Santa
 
-<hr>
+      </button>
 
-<h2>Login</h2>
+      <hr>
 
-<input
-id="loginEmail"
-placeholder="Email">
+      <h2>Login</h2>
 
-<input
-id="loginPassword"
-type="password"
-placeholder="Password">
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="Email Address">
 
-<button id="loginBtn">
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Password">
 
-Login
+      <button id="loginBtn">
 
-</button>
+        Login
 
-</div>
+      </button>
 
-<div
-id="dashboard"
-class="card hidden">
+    </div>
 
-<h2>Dashboard</h2>
+    <!-- PARTICIPANT DASHBOARD -->
 
-<p>
+    <div
+      id="dashboard"
+      class="card hidden">
 
-Welcome
+      <h2>
+        Participant Dashboard
+      </h2>
 
-<strong id="userName"></strong>
+      <p>
 
-</p>
+        Welcome
+        <strong id="userName"></strong>
 
-<p>
+      </p>
 
-Recipient:
+      <p>
 
-<span id="recipient">
+        🎁 Your Recipient:
 
-Not assigned yet
+        <strong id="recipient">
 
-</span>
+          Not assigned yet
 
-</p>
+        </strong>
 
-<h3>Wishlist</h3>
+      </p>
 
-<textarea
-id="wishlistEdit"></textarea>
+      <p>
 
-<button
-id="saveWishlistBtn">
+        💷 Budget:
+        £<span id="budget">20</span>
 
-Save Wishlist
+      </p>
 
-</button>
+      <h3>
 
-<h3>RSVP</h3>
+        🎁 Wishlist
 
-<select id="rsvp">
+      </h3>
 
-<option value="true">
+      <textarea
+        id="wishlistEdit"
+        rows="5"></textarea>
 
-✅ Attending
+      <button
+        id="saveWishlistBtn">
 
-</option>
+        Save Wishlist
 
-<option value="false">
+      </button>
 
-❌ Not Attending
+      <h3>
 
-</option>
+        ✅ RSVP
 
-</select>
+      </h3>
 
-<button
-id="saveRsvpBtn">
+      <select id="rsvp">
 
-Save RSVP
+        <option value="true">
 
-</button>
+          ✅ Attending
 
-<button
-id="logoutBtn">
+        </option>
 
-Logout
+        <option value="false">
 
-</button>
+          ❌ Not Attending
 
-</div>
+        </option>
 
-</div>
+      </select>
 
-<button id="showAdmin">
+      <button
+        id="saveRsvpBtn">
 
-Admin Login
+        Save RSVP
 
-</button>
+      </button>
 
-<div
-id="adminPanel"
-class="card hidden">
+      <hr>
 
-<h2>Admin Dashboard</h2>
+      <button
+        id="logoutBtn">
 
-<p>
+        Logout
 
-Registrations:
-<span id="participantCount">
-0
-</span>
+      </button>
 
-</p>
+    </div>
 
-<p>
+    <!-- ADMIN DASHBOARD -->
 
-Budget:
-£<span id="budgetDisplay">
-20
-</span>
+    <div
+      id="adminPanel"
+      class="card hidden">
 
-</p>
+      <h2>
 
-<input
-id="budgetInput"
-type="number"
-value="20">
+        🎅 Admin Dashboard
 
-<button id="saveBudgetBtn">
+      </h2>
 
-Save Budget
+      <p>
 
-</button>
+        Admin Account:
 
-<button id="toggleRegistrationBtn">
+        <strong>
+          admin@ttrnottingham.com
+        </strong>
 
-Close Registration
+      </p>
 
-</button>
+      <hr>
 
-<button id="generateDrawBtn">
+      <p>
 
-Generate Draw
+        Registrations:
 
-</button>
+        <strong
+          id="participantCount">
 
-<div id="participantList">
+          0
 
-</div>
+        </strong>
 
-</div>
+      </p>
 
-  
-<script
-type="module"
-src="app.js"></script>
+      <p>
+
+        Budget:
+
+        £<span id="budgetDisplay">
+
+          20
+
+        </span>
+
+      </p>
+
+      <input
+        id="budgetInput"
+        type="number"
+        min="1"
+        value="20">
+
+      <button
+        id="saveBudgetBtn">
+
+        Save Budget
+
+      </button>
+
+      <hr>
+
+      <button
+        id="toggleRegistrationBtn">
+
+        Open / Close Registration
+
+      </button>
+
+      <button
+        id="generateDrawBtn">
+
+        🎲 Generate Secret Santa Draw
+
+      </button>
+
+      <hr>
+
+      <h3>
+
+        Participants
+
+      </h3>
+
+      <div id="participantList">
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script
+    type="module"
+    src="app.js"></script>
 
 </body>
+
 </html>
