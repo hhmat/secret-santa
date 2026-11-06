@@ -22,9 +22,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 
-// =========================
+// ======================================
 // EVENT LISTENERS
-// =========================
+// ======================================
 
 document
   .getElementById("registerBtn")
@@ -59,15 +59,27 @@ document
   ?.addEventListener("click", generateDraw);
 
 
-// =========================
+// ======================================
 // REGISTER
-// =========================
+// ======================================
 
 async function registerUser() {
 
   try {
 
-    console.log("A - Started");
+    const settingsRef =
+      doc(db, "settings", "event");
+
+    const settingsSnap =
+      await getDoc(settingsRef);
+
+    if (
+      settingsSnap.exists() &&
+      settingsSnap.data().registrationOpen === false
+    ) {
+      alert("Registration is closed.");
+      return;
+    }
 
     const name =
       document.getElementById("name").value.trim();
@@ -78,7 +90,12 @@ async function registerUser() {
     const password =
       document.getElementById("password").value.trim();
 
-    console.log("B - Form data gathered");
+    const wishlist =
+      document
+        .getElementById("wishlist")
+        .value
+        .split("\n")
+        .filter(Boolean);
 
     const result =
       await createUserWithEmailAndPassword(
@@ -86,13 +103,6 @@ async function registerUser() {
         email,
         password
       );
-
-    console.log("C - Auth user created");
-    console.log(result.user);
-
-    console.log("UID:", result.user.uid);
-
-    console.log("D - About to write Firestore");
 
     await setDoc(
       doc(
@@ -103,21 +113,19 @@ async function registerUser() {
       {
         name,
         email,
-        role: "participant"
+        role: "participant",
+        wishlist,
+        rsvp: true,
+        recipient: "",
+        giftStatus: "Not Started"
       }
     );
 
-    console.log("E - Firestore write successful");
+    alert("Registration successful!");
 
-    alert("Success");
+  } catch (error) {
 
-  }
-  catch (error) {
-
-    console.error("FULL ERROR:");
     console.error(error);
-    console.error(error.code);
-    console.error(error.message);
 
     alert(error.message);
 
@@ -126,9 +134,9 @@ async function registerUser() {
 }
 
 
-// =========================
+// ======================================
 // LOGIN
-// =========================
+// ======================================
 
 async function loginUser() {
 
@@ -159,12 +167,13 @@ async function loginUser() {
     alert(error.message);
 
   }
+
 }
 
 
-// =========================
-// AUTH STATE
-// =========================
+// ======================================
+// AUTH CHANGES
+// ======================================
 
 onAuthStateChanged(
   auth,
@@ -180,8 +189,41 @@ onAuthStateChanged(
         .getElementById("dashboard")
         .classList.add("hidden");
 
+      document
+        .getElementById("adminPanel")
+        .classList.add("hidden");
+
       return;
     }
+
+    // =========================
+    // ADMIN USER
+    // =========================
+
+    if (
+      user.email === ADMIN_EMAIL
+    ) {
+
+      document
+        .getElementById("authCard")
+        .classList.add("hidden");
+
+      document
+        .getElementById("dashboard")
+        .classList.add("hidden");
+
+      document
+        .getElementById("adminPanel")
+        .classList.remove("hidden");
+
+      await loadAdminDashboard();
+
+      return;
+    }
+
+    // =========================
+    // PARTICIPANT USER
+    // =========================
 
     document
       .getElementById("authCard")
@@ -190,6 +232,10 @@ onAuthStateChanged(
     document
       .getElementById("dashboard")
       .classList.remove("hidden");
+
+    document
+      .getElementById("adminPanel")
+      .classList.add("hidden");
 
     const settingsSnap =
       await getDoc(
@@ -209,26 +255,6 @@ onAuthStateChanged(
         .getElementById("budget")
         .textContent =
         settings.budget || 20;
-
-      const budgetDisplay =
-        document.getElementById(
-          "budgetDisplay"
-        );
-
-      if (budgetDisplay) {
-
-        budgetDisplay.textContent =
-          settings.budget || 20;
-
-      }
-    }
-
-    if (
-      user.email === ADMIN_EMAIL
-    ) {
-
-      await loadAdminDashboard();
-
     }
 
     const snapshot =
@@ -241,6 +267,11 @@ onAuthStateChanged(
       );
 
     if (!snapshot.exists()) {
+
+      console.log(
+        "Participant record missing."
+      );
+
       return;
     }
 
@@ -250,7 +281,7 @@ onAuthStateChanged(
     document
       .getElementById("userName")
       .textContent =
-      data.name;
+      data.name || "";
 
     document
       .getElementById("wishlistEdit")
@@ -269,16 +300,15 @@ onAuthStateChanged(
         .getElementById("recipient")
         .textContent =
         data.recipient;
-
     }
 
   }
 );
 
 
-// =========================
-// WISHLIST
-// =========================
+// ======================================
+// SAVE WISHLIST
+// ======================================
 
 async function saveWishlist() {
 
@@ -289,9 +319,7 @@ async function saveWishlist() {
 
   const wishlist =
     document
-      .getElementById(
-        "wishlistEdit"
-      )
+      .getElementById("wishlistEdit")
       .value
       .split("\n")
       .filter(Boolean);
@@ -307,15 +335,13 @@ async function saveWishlist() {
     }
   );
 
-  alert(
-    "Wishlist updated."
-  );
+  alert("Wishlist updated.");
 }
 
 
-// =========================
-// RSVP
-// =========================
+// ======================================
+// SAVE RSVP
+// ======================================
 
 async function saveRsvp() {
 
@@ -340,15 +366,13 @@ async function saveRsvp() {
     }
   );
 
-  alert(
-    "RSVP updated."
-  );
+  alert("RSVP updated.");
 }
 
 
-// =========================
+// ======================================
 // ADMIN DASHBOARD
-// =========================
+// ======================================
 
 async function loadAdminDashboard() {
 
@@ -359,9 +383,31 @@ async function loadAdminDashboard() {
 
   if (!adminPanel) return;
 
-  adminPanel
-    .classList
-    .remove("hidden");
+  const settingsSnap =
+    await getDoc(
+      doc(
+        db,
+        "settings",
+        "event"
+      )
+    );
+
+  if (settingsSnap.exists()) {
+
+    const settings =
+      settingsSnap.data();
+
+    document
+      .getElementById("budgetDisplay")
+      .textContent =
+      settings.budget || 20;
+
+    document
+      .getElementById("budgetInput")
+      .value =
+      settings.budget || 20;
+
+  }
 
   const snapshot =
     await getDocs(
@@ -398,7 +444,7 @@ async function loadAdminDashboard() {
 
       html += `
         <div>
-          ${p.name}
+          ${p.name || "Unknown"}
           (${p.rsvp ? "✅" : "❌"})
         </div>
       `;
@@ -415,18 +461,16 @@ async function loadAdminDashboard() {
 }
 
 
-// =========================
-// BUDGET
-// =========================
+// ======================================
+// SAVE BUDGET
+// ======================================
 
 async function saveBudget() {
 
   const budget =
     Number(
       document
-        .getElementById(
-          "budgetInput"
-        )
+        .getElementById("budgetInput")
         .value
     );
 
@@ -451,15 +495,13 @@ async function saveBudget() {
     .textContent =
     budget;
 
-  alert(
-    "Budget updated."
-  );
+  alert("Budget updated.");
 }
 
 
-// =========================
-// REGISTRATION OPEN/CLOSE
-// =========================
+// ======================================
+// REGISTRATION OPEN / CLOSE
+// ======================================
 
 async function toggleRegistration() {
 
@@ -491,14 +533,16 @@ async function toggleRegistration() {
   );
 
   alert(
-    "Registration updated."
+    `Registration ${
+      !current ? "opened" : "closed"
+    }`
   );
 }
 
 
-// =========================
+// ======================================
 // EXCLUSIONS
-// =========================
+// ======================================
 
 const exclusions = [
   ["Amanda", "Nick Farmer"],
@@ -508,9 +552,9 @@ const exclusions = [
 ];
 
 
-// =========================
-// DRAW GENERATOR
-// =========================
+// ======================================
+// GENERATE DRAW
+// ======================================
 
 async function generateDraw() {
 
@@ -522,25 +566,33 @@ async function generateDraw() {
       )
     );
 
-  const players =
-    [];
+  const players = [];
 
   snapshot.forEach(
     (docSnap) => {
 
+      const participant =
+        docSnap.data();
+
+      if (
+        participant.role === "admin"
+      ) {
+        return;
+      }
+
       players.push({
+
         id: docSnap.id,
-        ...docSnap.data()
+
+        ...participant
+
       });
 
     }
   );
 
-  let valid =
-    false;
-
-  let recipients =
-    [];
+  let valid = false;
+  let recipients = [];
 
   while (!valid) {
 
@@ -572,7 +624,6 @@ async function generateDraw() {
 
         valid = false;
         break;
-
       }
 
       const prohibited =
@@ -586,10 +637,10 @@ async function generateDraw() {
 
         valid = false;
         break;
-
       }
 
     }
+
   }
 
   for (
@@ -607,6 +658,7 @@ async function generateDraw() {
       {
         giver:
           players[i].name,
+
         recipient:
           recipients[i].name
       }
@@ -627,6 +679,8 @@ async function generateDraw() {
   }
 
   alert(
-    "Secret Santa draw completed!"
+    "🎄 Secret Santa draw completed!"
   );
+
+  await loadAdminDashboard();
 }
