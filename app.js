@@ -67,23 +67,7 @@ async function registerUser() {
 
   try {
 
-    console.log("STEP 1");
-
-    const settingsRef =
-      doc(db, "settings", "event");
-
-    const settingsSnap =
-      await getDoc(settingsRef);
-
-    console.log("STEP 2");
-
-    if (
-      settingsSnap.exists() &&
-      settingsSnap.data().registrationOpen === false
-    ) {
-      alert("Registration is closed.");
-      return;
-    }
+    console.log("A - Started");
 
     const name =
       document.getElementById("name").value.trim();
@@ -94,14 +78,7 @@ async function registerUser() {
     const password =
       document.getElementById("password").value.trim();
 
-    const wishlist =
-      document
-        .getElementById("wishlist")
-        .value
-        .split("\n")
-        .filter(Boolean);
-
-    console.log("STEP 3");
+    console.log("B - Form data gathered");
 
     const result =
       await createUserWithEmailAndPassword(
@@ -110,12 +87,12 @@ async function registerUser() {
         password
       );
 
-    console.log(
-      "AUTH SUCCESS",
-      result.user.uid
-    );
+    console.log("C - Auth user created");
+    console.log(result.user);
 
-    console.log("STEP 4");
+    console.log("UID:", result.user.uid);
+
+    console.log("D - About to write Firestore");
 
     await setDoc(
       doc(
@@ -126,28 +103,26 @@ async function registerUser() {
       {
         name,
         email,
-        role: "participant",
-        wishlist,
-        rsvp: true,
-        recipient: "",
-        giftStatus: "Not Started"
+        role: "participant"
       }
     );
 
-    console.log("FIRESTORE SUCCESS");
+    console.log("E - Firestore write successful");
 
-    alert("Registration successful!");
+    alert("Success");
 
-  } catch (error) {
+  }
+  catch (error) {
 
-    console.error(
-      "REGISTRATION ERROR",
-      error
-    );
+    console.error("FULL ERROR:");
+    console.error(error);
+    console.error(error.code);
+    console.error(error.message);
 
     alert(error.message);
 
   }
+
 }
 
 
