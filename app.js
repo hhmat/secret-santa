@@ -82,6 +82,7 @@ async function registerUser(){
  {
   name,
   email,
+  role:"participant",
   wishlist,
   rsvp:true,
   recipient:"",
