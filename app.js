@@ -30,6 +30,32 @@ document
 .addEventListener(
 "click",
 registerUser
+const settingsRef =
+doc(
+ db,
+ "settings",
+ "event"
+);
+
+const settingsSnap =
+await getDoc(
+ settingsRef
+);
+
+if(
+ settingsSnap.exists()
+ &&
+ settingsSnap.data()
+ .registrationOpen === false
+){
+
+ alert(
+ "Registration closed"
+ );
+
+ return;
+
+}
 );
 
 document
@@ -135,6 +161,12 @@ async function loginUser(){
 }
 
 onAuthStateChanged(
+ 
+ if(user.email === ADMIN_EMAIL){
+
+ loadAdminDashboard();
+
+}
  auth,
  async(user)=>{
 
@@ -284,3 +316,303 @@ import {
  getDocs
 }
 from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+async function loadAdminDashboard(){
+
+ document
+ .getElementById("adminPanel")
+ .classList.remove("hidden");
+
+ const participantsSnapshot =
+ await getDocs(
+ collection(
+ db,
+ "participants"
+ )
+ );
+
+ const participants=[];
+
+ participantsSnapshot.forEach(
+ doc=>{
+  participants.push(
+   doc.data()
+  );
+ });
+
+ document
+ .getElementById(
+ "participantCount"
+ )
+ .textContent=
+ participants.length;
+
+ let html="";
+
+ participants.forEach(
+ p=>{
+
+ html += `
+ <div>
+ ${p.name}
+ (${p.rsvp ? '✅':'❌'})
+ </div>
+ `;
+
+ });
+
+ document
+ .getElementById(
+ "participantList"
+ )
+ .innerHTML=
+ html;
+
+}
+
+import {
+ getDoc,
+ setDoc
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+document
+.getElementById(
+"saveBudgetBtn"
+)
+.addEventListener(
+"click",
+saveBudget
+);
+
+async function saveBudget(){
+
+ const budget=
+ Number(
+ document
+ .getElementById(
+ "budgetInput"
+ )
+ .value
+ );
+
+ await setDoc(
+ doc(
+ db,
+ "settings",
+ "event"
+ ),
+ {
+  budget
+ },
+ {
+  merge:true
+ }
+ );
+
+ alert(
+ "Budget updated"
+ );
+
+}
+
+document
+.getElementById(
+"toggleRegistrationBtn"
+)
+.addEventListener(
+"click",
+toggleRegistration
+);
+
+async function toggleRegistration(){
+
+ const settingsRef =
+ doc(
+ db,
+ "settings",
+ "event"
+ );
+
+ const settingsSnap =
+ await getDoc(
+ settingsRef
+ );
+
+ const current =
+ settingsSnap.data()
+ .registrationOpen;
+
+ await setDoc(
+ settingsRef,
+ {
+  registrationOpen:
+  !current
+ },
+ {
+  merge:true
+ }
+ );
+
+ alert(
+ "Registration updated"
+ );
+
+}
+
+document
+.getElementById(
+"generateDrawBtn"
+)
+.addEventListener(
+"click",
+generateDraw
+);
+
+const exclusions = [
+
+ ["Amanda","Nick Farmer"],
+ ["Nick Farmer","Amanda"],
+
+ ["Mel","Mark"],
+ ["Mark","Mel"]
+
+];
+
+async function generateDraw(){
+
+ const snapshot =
+ await getDocs(
+ collection(
+ db,
+ "participants"
+ )
+ );
+
+ const players=[];
+
+ snapshot.forEach(
+ d=>{
+
+  players.push({
+
+   id:d.id,
+
+   ...d.data()
+
+  });
+
+ });
+
+ let valid=false;
+
+ let recipients=[];
+
+ while(!valid){
+
+  recipients=
+  [...players];
+
+  recipients.sort(
+   ()=>Math.random()-0.5
+  );
+
+  valid=true;
+
+  for(
+   let i=0;
+   i<players.length;
+   i++
+  ){
+
+   const giver =
+   players[i].name;
+
+   const receiver =
+   recipients[i].name;
+
+   if(
+    giver === receiver
+   ){
+
+    valid=false;
+    break;
+
+   }
+
+   const prohibited =
+   exclusions.some(
+    pair=>
+
+    pair[0]===giver &&
+    pair[1]===receiver
+
+   );
+
+   if(prohibited){
+
+    valid=false;
+    break;
+
+   }
+  }
+ }
+
+ for(
+  let i=0;
+  i<players.length;
+  i++
+ ){
+
+  await setDoc(
+
+   doc(
+    db,
+    "assignments",
+    players[i].id
+   ),
+
+   {
+
+    giver:
+    players[i].name,
+
+    recipient:
+    recipients[i].name
+
+   }
+
+  );
+
+  await updateDoc(
+
+   doc(
+    db,
+    "participants",
+    players[i].id
+   ),
+
+   {
+    recipient:
+    recipients[i].name
+   }
+
+  );
+ }
+
+ alert(
+ "Draw completed!"
+ );
+
+}
+
+if(data.recipient){
+
+ document
+ .getElementById(
+ "recipient"
+ )
+ .textContent =
+ data.recipient;
+
+}
