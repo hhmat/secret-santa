@@ -1,3 +1,6 @@
+const ADMIN_EMAIL =
+"admin@ttrnottingham.com";
+
 import {
  auth,
  db
