@@ -39,6 +39,10 @@ document
   ?.addEventListener("click", () => signOut(auth));
 
 document
+  .getElementById("adminLogoutBtn")
+  ?.addEventListener("click", () => signOut(auth));
+
+document
   .getElementById("saveWishlistBtn")
   ?.addEventListener("click", saveWishlist);
 
@@ -77,18 +81,29 @@ async function registerUser() {
       settingsSnap.exists() &&
       settingsSnap.data().registrationOpen === false
     ) {
+
       alert("Registration is closed.");
       return;
+
     }
 
     const name =
-      document.getElementById("name").value.trim();
+      document
+        .getElementById("name")
+        .value
+        .trim();
 
     const email =
-      document.getElementById("email").value.trim();
+      document
+        .getElementById("email")
+        .value
+        .trim();
 
     const password =
-      document.getElementById("password").value.trim();
+      document
+        .getElementById("password")
+        .value
+        .trim();
 
     const wishlist =
       document
@@ -126,7 +141,6 @@ async function registerUser() {
   } catch (error) {
 
     console.error(error);
-
     alert(error.message);
 
   }
@@ -163,7 +177,6 @@ async function loginUser() {
   } catch (error) {
 
     console.error(error);
-
     alert(error.message);
 
   }
@@ -172,7 +185,7 @@ async function loginUser() {
 
 
 // ======================================
-// AUTH CHANGES
+// AUTH STATE
 // ======================================
 
 onAuthStateChanged(
@@ -196,9 +209,9 @@ onAuthStateChanged(
       return;
     }
 
-    // =========================
-    // ADMIN USER
-    // =========================
+    // ==================================
+    // ADMIN LOGIN
+    // ==================================
 
     if (
       user.email === ADMIN_EMAIL
@@ -221,9 +234,9 @@ onAuthStateChanged(
       return;
     }
 
-    // =========================
-    // PARTICIPANT USER
-    // =========================
+    // ==================================
+    // PARTICIPANT LOGIN
+    // ==================================
 
     document
       .getElementById("authCard")
@@ -248,13 +261,11 @@ onAuthStateChanged(
 
     if (settingsSnap.exists()) {
 
-      const settings =
-        settingsSnap.data();
-
       document
         .getElementById("budget")
         .textContent =
-        settings.budget || 20;
+        settingsSnap.data().budget || 20;
+
     }
 
     const snapshot =
@@ -269,7 +280,7 @@ onAuthStateChanged(
     if (!snapshot.exists()) {
 
       console.log(
-        "Participant record missing."
+        "Participant document not found."
       );
 
       return;
@@ -300,6 +311,7 @@ onAuthStateChanged(
         .getElementById("recipient")
         .textContent =
         data.recipient;
+
     }
 
   }
@@ -307,7 +319,7 @@ onAuthStateChanged(
 
 
 // ======================================
-// SAVE WISHLIST
+// WISHLIST
 // ======================================
 
 async function saveWishlist() {
@@ -340,7 +352,7 @@ async function saveWishlist() {
 
 
 // ======================================
-// SAVE RSVP
+// RSVP
 // ======================================
 
 async function saveRsvp() {
@@ -376,13 +388,6 @@ async function saveRsvp() {
 
 async function loadAdminDashboard() {
 
-  const adminPanel =
-    document.getElementById(
-      "adminPanel"
-    );
-
-  if (!adminPanel) return;
-
   const settingsSnap =
     await getDoc(
       doc(
@@ -417,8 +422,7 @@ async function loadAdminDashboard() {
       )
     );
 
-  const participants =
-    [];
+  const participants = [];
 
   snapshot.forEach(
     (docSnap) => {
@@ -431,9 +435,7 @@ async function loadAdminDashboard() {
   );
 
   document
-    .getElementById(
-      "participantCount"
-    )
+    .getElementById("participantCount")
     .textContent =
     participants.length;
 
@@ -443,9 +445,15 @@ async function loadAdminDashboard() {
     (p) => {
 
       html += `
-        <div>
-          ${p.name || "Unknown"}
-          (${p.rsvp ? "✅" : "❌"})
+        <div style="
+          border:1px solid #ddd;
+          padding:10px;
+          margin-bottom:10px;
+          border-radius:8px;
+        ">
+          <strong>${p.name || "Unknown"}</strong><br>
+          RSVP:
+          ${p.rsvp ? "✅ Attending" : "❌ Not Confirmed"}
         </div>
       `;
 
@@ -453,9 +461,7 @@ async function loadAdminDashboard() {
   );
 
   document
-    .getElementById(
-      "participantList"
-    )
+    .getElementById("participantList")
     .innerHTML =
     html;
 }
@@ -489,9 +495,7 @@ async function saveBudget() {
   );
 
   document
-    .getElementById(
-      "budgetDisplay"
-    )
+    .getElementById("budgetDisplay")
     .textContent =
     budget;
 
@@ -500,7 +504,7 @@ async function saveBudget() {
 
 
 // ======================================
-// REGISTRATION OPEN / CLOSE
+// OPEN/CLOSE REGISTRATION
 // ======================================
 
 async function toggleRegistration() {
@@ -513,19 +517,15 @@ async function toggleRegistration() {
     );
 
   const settingsSnap =
-    await getDoc(
-      settingsRef
-    );
+    await getDoc(settingsRef);
 
   const current =
-    settingsSnap.data()
-    .registrationOpen;
+    settingsSnap.data().registrationOpen;
 
   await setDoc(
     settingsRef,
     {
-      registrationOpen:
-        !current
+      registrationOpen: !current
     },
     {
       merge: true
@@ -533,9 +533,7 @@ async function toggleRegistration() {
   );
 
   alert(
-    `Registration ${
-      !current ? "opened" : "closed"
-    }`
+    `Registration ${!current ? "opened" : "closed"}`
   );
 }
 
@@ -581,11 +579,8 @@ async function generateDraw() {
       }
 
       players.push({
-
         id: docSnap.id,
-
         ...participant
-
       });
 
     }
@@ -596,12 +591,10 @@ async function generateDraw() {
 
   while (!valid) {
 
-    recipients =
-      [...players];
+    recipients = [...players];
 
     recipients.sort(
-      () =>
-        Math.random() - 0.5
+      () => Math.random() - 0.5
     );
 
     valid = true;
@@ -618,12 +611,11 @@ async function generateDraw() {
       const receiver =
         recipients[i].name;
 
-      if (
-        giver === receiver
-      ) {
+      if (giver === receiver) {
 
         valid = false;
         break;
+
       }
 
       const prohibited =
@@ -637,6 +629,7 @@ async function generateDraw() {
 
         valid = false;
         break;
+
       }
 
     }
@@ -656,11 +649,8 @@ async function generateDraw() {
         players[i].id
       ),
       {
-        giver:
-          players[i].name,
-
-        recipient:
-          recipients[i].name
+        giver: players[i].name,
+        recipient: recipients[i].name
       }
     );
 
