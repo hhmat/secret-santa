@@ -2,187 +2,162 @@
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🎄 TuT - TTR Nottingham Secret Santa 2026</title>
-
-  <link
-    rel="stylesheet"
-    href="style.css">
-
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
   <header class="header">
-
-    <h1>
-      🎄 Secret Santa 2026 🎅
-    </h1>
-
-    <p>
-      🏉 TuT - TTR Nottingham Secret Santa 2026
-    </p>
-
+    <h1>🎄 Secret Santa 2026 🎅</h1>
+    <p>🏉 TuT - TTR Nottingham Secret Santa 2026</p>
   </header>
 
   <div class="container">
 
     <!-- REGISTRATION / LOGIN -->
+    <div id="authCard" class="card">
+      
+      <!-- Registration Form -->
+      <section id="registrationSection">
+        <h2>Join Secret Santa</h2>
+        <p id="regStatusNotice" class="hidden" style="color: #c62828; font-weight: bold;">
+          Registration is currently closed.
+        </p>
 
-    <div
-      id="authCard"
-      class="card">
+        <form id="registerForm" onsubmit="return false;">
+          <input
+            id="name"
+            type="text"
+            placeholder="Your Name"
+            autocomplete="name"
+            required>
 
-      <h2>Join Secret Santa</h2>
+          <input
+            id="email"
+            type="email"
+            placeholder="Email Address"
+            autocomplete="email"
+            required>
 
-      <input
-        id="name"
-        type="text"
-        placeholder="Your Name">
+          <input
+            id="password"
+            type="password"
+            placeholder="Choose Password"
+            autocomplete="new-password"
+            required>
 
-      <input
-        id="email"
-        type="email"
-        placeholder="Email Address">
+          <textarea
+            id="wishlist"
+            rows="4"
+            placeholder="Your Wishlist (one idea per line)"></textarea>
 
-      <input
-        id="password"
-        type="password"
-        placeholder="Choose Password">
-
-      <textarea
-        id="wishlist"
-        rows="5"
-        placeholder="Wishlist (one item per line)"></textarea>
-
-      <button id="registerBtn">
-        Join Secret Santa
-      </button>
+          <button id="registerBtn" type="button">
+            Join Secret Santa
+          </button>
+        </form>
+      </section>
 
       <hr>
 
-      <h2>Login</h2>
+      <!-- Login Form -->
+      <section id="loginSection">
+        <h2>Login</h2>
+        <form id="loginForm" onsubmit="return false;">
+          <input
+            id="loginEmail"
+            type="email"
+            placeholder="Email Address"
+            autocomplete="username"
+            required>
 
-      <input
-        id="loginEmail"
-        type="email"
-        placeholder="Email Address">
+          <input
+            id="loginPassword"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            required>
 
-      <input
-        id="loginPassword"
-        type="password"
-        placeholder="Password">
-
-      <button id="loginBtn">
-        Login
-      </button>
+          <button id="loginBtn" type="button">
+            Login
+          </button>
+        </form>
+      </section>
 
     </div>
 
     <!-- PARTICIPANT DASHBOARD -->
-
-    <div
-      id="dashboard"
-      class="card hidden">
-
-      <h2>
-        Participant Dashboard
-      </h2>
+    <div id="dashboard" class="card hidden">
+      <h2>Participant Dashboard</h2>
 
       <p>
-        Welcome
-        <strong id="userName"></strong>
+        Welcome, <strong id="userName"></strong>
       </p>
+
+      <div style="background: #fdf8e2; border-left: 4px solid #ffb300; padding: 12px; margin: 15px 0; border-radius: 4px;">
+        <p style="margin: 0 0 8px 0;">
+          🎁 <strong>Your Assigned Recipient:</strong>
+          <span id="recipient" style="font-size: 1.1em; font-weight: bold; color: #2e7d32;">
+            Not assigned yet
+          </span>
+        </p>
+        <p style="margin: 0;">
+          📝 <strong>Their Wishlist:</strong>
+          <span id="recipientWishlist" style="display: block; white-space: pre-line; margin-top: 4px; font-style: italic;">
+            Will appear once assigned
+          </span>
+        </p>
+      </div>
 
       <p>
-        🎁 Your Recipient:
-        <strong id="recipient">
-          Not assigned yet
-        </strong>
+        💷 Event Budget: <strong>£<span id="budget">20</span></strong>
       </p>
 
-      <p>
-        💷 Budget:
-        £<span id="budget">20</span>
-      </p>
+      <hr>
 
-      <h3>
-        🎁 Wishlist
-      </h3>
-
+      <h3>🎁 Your Wishlist</h3>
       <textarea
         id="wishlistEdit"
-        rows="5"></textarea>
-
+        rows="4"
+        placeholder="Update your wishlist items here..."></textarea>
       <button id="saveWishlistBtn">
         Save Wishlist
       </button>
 
-      <h3>
-        ✅ RSVP
-      </h3>
-
+      <h3>✅ RSVP Status</h3>
       <select id="rsvp">
-
-        <option value="true">
-          ✅ Attending
-        </option>
-
-        <option value="false">
-          ❌ Not Attending
-        </option>
-
+        <option value="true">✅ Attending</option>
+        <option value="false">❌ Not Attending</option>
       </select>
-
       <button id="saveRsvpBtn">
         Save RSVP
       </button>
 
       <hr>
 
-      <button id="logoutBtn">
+      <button id="logoutBtn" style="background: #757575;">
         Logout
       </button>
-
     </div>
 
     <!-- ADMIN DASHBOARD -->
-
-    <div
-      id="adminPanel"
-      class="card hidden">
-
-      <h2>
-        🎅 Admin Dashboard
-      </h2>
+    <div id="adminPanel" class="card hidden">
+      <h2>🎅 Admin Dashboard</h2>
 
       <p>
-        Admin Account:
-        <strong>
-          admin@ttrnottingham.com
-        </strong>
+        Admin Account: <strong>admin@ttrnottingham.com</strong>
       </p>
 
       <hr>
 
       <p>
-        Registrations:
-        <strong id="participantCount">
-          0
-        </strong>
+        Registrations: <strong id="participantCount">0</strong>
       </p>
 
       <p>
-        Budget:
-        £<span id="budgetDisplay">
-          20
-        </span>
+        Current Budget: £<span id="budgetDisplay">20</span>
       </p>
 
       <input
@@ -201,34 +176,25 @@
         🔓 Toggle Registration
       </button>
 
-      <button id="generateDrawBtn">
+      <button id="generateDrawBtn" style="margin-top: 10px; background: #c62828;">
         🎄 Generate Secret Santa Draw
       </button>
 
       <hr>
 
-      <h3>
-        Participants
-      </h3>
-
-      <div id="participantList">
-
-      </div>
+      <h3>Registered Participants</h3>
+      <div id="participantList"></div>
 
       <hr>
 
-      <button id="adminLogoutBtn">
+      <button id="adminLogoutBtn" style="background: #757575;">
         Logout
       </button>
-
     </div>
 
   </div>
 
-  <script
-    type="module"
-    src="app.js"></script>
-
+  <script type="module" src="app.js"></script>
 </body>
 
 </html>
